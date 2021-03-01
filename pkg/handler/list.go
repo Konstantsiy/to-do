@@ -4,6 +4,7 @@ import (
 	"github.com/Konstantsiy/todo/pkg/entity"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 func (h *Handler) createList(c *gin.Context) {
@@ -26,18 +27,65 @@ func (h *Handler) createList(c *gin.Context) {
 	})
 }
 
-func (h *Handler) getAllLists(c *gin.Context) {
+type getAllListsResponse struct {
+	Data []entity.TodoList
+}
 
+func (h *Handler) getAllLists(c *gin.Context) {
+	userId, err := getUserId(c)
+	if err != nil {
+		return
+	}
+	lists, err := h.service.TodoList.GetAll(userId)
+	if err != nil {
+		NewResponseError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, getAllListsResponse{
+		Data: lists,
+	})
 }
 
 func (h *Handler) getListById(c *gin.Context) {
+	userId, err := getUserId(c)
+	if err != nil {
+		return
+	}
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		NewResponseError(c, http.StatusBadRequest, err.Error())
+		return
+	}
 
-}
-
-func (h *Handler) updateList(c *gin.Context) {
-
+	list, err := h.service.TodoList.GetById(userId, id)
+	if err != nil {
+		NewResponseError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, list)
 }
 
 func (h *Handler) deleteList(c *gin.Context) {
+	userId, err := getUserId(c)
+	if err != nil {
+		return
+	}
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		NewResponseError(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = h.service.TodoList.Delete(userId, id)
+	if err != nil {
+		NewResponseError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, statusResponse{
+		Status: "ok",
+	})
+}
+
+func (h *Handler) updateList(c *gin.Context) {
 
 }

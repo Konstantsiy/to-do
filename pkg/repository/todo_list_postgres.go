@@ -34,3 +34,27 @@ func (r *TodoListPostgres) Create(userId int, list entity.TodoList) (int, error)
 	}
 	return id, tx.Commit()
 }
+
+func (r *TodoListPostgres) GetAll(userId int) ([]entity.TodoList, error) {
+	var lists []entity.TodoList
+	getAllListsQuery := fmt.Sprintf("select tl.id, tl.title, tl.description from %s tl inner join %s ul on tl.id = ul.list_id where ul.user_id=$1",
+		todoListsTable, usersListsTable)
+	err := r.db.Select(&lists, getAllListsQuery, userId)
+
+	return lists, err
+}
+
+func (r *TodoListPostgres) GetById(userId, listId int) (entity.TodoList, error) {
+	var list entity.TodoList
+	getListByIdQuery := fmt.Sprintf("select tl.id, tl.title, tl.description from %s tl inner join %s ul on tl.id = ul.list_id where ul.user_id=$1 and ul.list_id=$2",
+		todoListsTable, usersListsTable)
+	err := r.db.Get(&list, getListByIdQuery, userId, listId)
+
+	return list, err
+}
+
+func (r *TodoListPostgres) Delete(userId, listId int) error {
+	deleteQuery := fmt.Sprintf("delete form %s tl using %s ul where tl.id = ul.list_id and ul.user_id = $1 and ul.list_id = $2", todoListsTable, usersListsTable)
+	_, err := r.db.Exec(deleteQuery, userId, listId)
+	return err
+}
