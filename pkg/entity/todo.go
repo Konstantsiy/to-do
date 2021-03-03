@@ -1,5 +1,7 @@
 package entity
 
+import "errors"
+
 type TodoList struct {
 	Id          int
 	Title       string
@@ -23,4 +25,16 @@ type ListItem struct {
 	Id     int
 	ListId int
 	ItemId int
+}
+
+type UpdateListInput struct {
+	Title       *string
+	Description *string
+}
+
+func (u UpdateListInput) Validate() error {
+	if u.Title == nil && u.Description == nil {
+		return errors.New("update structure cannot have nil values")
+	}
+	return nil
 }
